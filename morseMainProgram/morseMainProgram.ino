@@ -1,7 +1,10 @@
+#include "morseIndex.h"
+
 bool eClk = digitalRead(3);
 bool eCt = digitalRead(2);
-bool morse = digitalRead(4);
+bool morse = digitalRead(13);
 String hello = "hi";
+morseIndex morseI;
 
 void setup() {
   morseWrite("SOS");
@@ -13,17 +16,25 @@ void loop() {
 
 int morseWrite(String message) {
   Serial.begin(9600);
-  
-  Serial.print(morseI.r);
+  for (char c : message){
+    for (bool m : morseI.c){
+      pulse(m);
+    }
+  }
 }
 
 String morseRead(){
 
 }
 
-int pulse(int length){
+void pulse(bool length){
   digitalWrite(morse, HIGH);
-  delay(length);
+  if (length){
+    delay(3);
+  }
+  else{
+    delay(1);
+  }
   digitalWrite(morse, LOW);
   delay(0.25);
 }
