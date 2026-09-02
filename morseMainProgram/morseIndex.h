@@ -47,6 +47,3 @@ class morseIndex {
   bool slh[5] = {true, false, false, true, false};
   bool eql[5] = {true, false, false, false, true};
 };
-
-
-morseIndex morseI;
