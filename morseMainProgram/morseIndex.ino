@@ -1,0 +1,52 @@
+//The map containing all The morse Translations
+class morseIndex {
+  bool a[2] = {true, false};
+  bool b[4] = {true, false, false, false};
+  bool c[4] = {true, false, true, false};
+  bool d[3] = {true, false, false};
+  bool e[1] = {false};
+  bool f[4] = {false, false, true, false};
+  bool g[3] = {true, true, false};
+  bool h[4] = {false, false, false, false};
+  bool i[2] = {false, false};
+  bool j[4] = {false, true, true, true};
+  bool k[3] = {true, false, true};
+  bool l[4] = {false, true, false, false};
+  bool m[2] = {true, true};
+  bool n[2] = {true, false};
+  bool o[3] = {true, true, true};
+  bool p[4] = {false, true, true, false};
+  bool q[4] = {true, true, false, true};
+  bool r[3] = {false, true, false};
+  bool s[3] = {false, false, false};
+  bool t[1] = {true};
+  bool u[3] = {false, false, true};
+  bool v[4] = {false, false, false, true};
+  bool w[3] = {false, true, true};
+  bool x[4] = {true, false, false, true};
+  bool y[4] = {true, false, true, true};
+  bool z[4] = {true, true, false, false};
+  bool _1[5] = {false, true, true, true, true};
+  bool _2[5] = {false, false, true, true, true};
+  bool _3[5] = {false, false, false, true, true};
+  bool _4[5] = {false, false, false, false, true};
+  bool _5[5] = {false, false, false, false, false};
+  bool _6[5] = {true, false, false, false, false};
+  bool _7[5] = {true, true, false, false, false};
+  bool _8[5] = {true, true ,true, false, false};
+  bool _9[5] = {true, true, true, true, false};
+  bool _0[5] = {true, true, true, true, true};
+  bool qmrk[6] = {false, false, true, true, false, false};
+  bool emrk[6] = {true, false, true, false, true, true};
+  bool prd[6] = {false, true, false, true, false, true};
+  bool cma[6] = {true, true, false, false, true, true};
+  bool scol[6] = {true, false, true, false, true, false};
+  bool col[6] = {true, true, true, false, false, false};
+  bool pls[5] = {false, true, false, true, false};
+  bool mns[6] = {true, false, false, false, false, true};
+  bool slh[5] = {true, false, false, true, false};
+  bool eql[5] = {true, false, false, false, true};
+};
+
+
+morseIndex morseI;
