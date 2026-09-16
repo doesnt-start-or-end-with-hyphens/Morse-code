@@ -1,4 +1,5 @@
 //The map containing all The morse Translations
+#include <ctype.h>
 class morseIndex {
   bool a[2] = {true, false};
   bool b[4] = {true, false, false, false};
@@ -47,3 +48,192 @@ class morseIndex {
   bool slh[5] = {true, false, false, true, false};
   bool eql[5] = {true, false, false, false, true};
 };
+bool getMorse[int returnSize] (char letter){
+  if (tolower(letter) == "a"){
+    returnSize = 2;
+    return morseI.a;
+  }
+  else if (tolower(letter) == "b"){
+    returnSize = 4;
+    return morseI.a;
+  }
+  else if (tolower(letter) == "c"){
+    returnSize = 4;
+    return morseI.c;
+  }
+  else if (tolower(letter) == "d"){
+    returnSize = 3;
+    return morseI.d;
+  }
+  else if (tolower(letter) == "e"){
+    returnSize = 1;
+    return morseI.e;
+  }
+  else if (tolower(letter) == "f"){
+    returnSize = 4;
+    return morseI.f;
+  }
+  else if (tolower(letter) == "g"){
+    returnSize = 3;
+    return morseI.g;
+  }
+  else if (tolower(letter) == "h"){
+    returnSize = 4;
+    return morseI.h;
+  }
+  else if (tolower(letter) == "i"){
+    returnSize = 2;
+    return morseI.i;
+  }
+  else if (tolower(letter) == "j"){
+    returnSize = 4;
+    return morseI.j;
+  }
+  else if (tolower(letter) == "k"){
+    returnSize = 3;
+    return morseI.k;
+  }
+  else if (tolower(letter) == "l"){
+    returnSize = 4;
+    return morseI.l;
+  }
+  else if (tolower(letter) == "m"){
+    returnSize = 2;
+    return morseI.m;
+  }
+  else if (tolower(letter) == "n"){
+    returnSize = 2;
+    return morseI.n;
+  }
+  else if (tolower(letter) == "o"){
+    returnSize = 3;
+    return morseI.o;
+  }
+  else if (tolower(letter) == "p"){
+    returnSize = 4;
+    return morseI.p;
+  }
+  else if (tolower(letter) == "q"){
+    returnSize = 4;
+    return morseI.q;
+  }
+  else if (tolower(letter) == "r"){
+    returnSize = 3;
+    return morseI.r;
+  }
+  else if (tolower(letter) == "s"){
+    returnSize = 3;
+    return morseI.s;
+  }
+  else if (tolower(letter) == "t"){
+    returnSize = 1;
+    return morseI.t;
+  }
+  else if (tolower(letter) == "u"){
+    returnSize = 3;
+    return morseI.u;
+  }
+  else if (tolower(letter) == "v"){
+    returnSize = 4;
+    return morseI.v;
+  }
+  else if (tolower(letter) == "w"){
+    returnSize = 3;
+    return morseI.w;
+  }
+  else if (tolower(letter) == "x"){
+    returnSize = 4;
+    return morseI.x;
+  }
+  else if (tolower(letter) == "y"){
+    returnSize = 4;
+    return morseI.y;
+  }
+  else if (tolower(letter) == "z"){
+    returnSize = 4;
+    return morseI.z;
+  }
+  else if (letter == "1"){
+    returnSize = 5;
+    return morseI._1;
+  }
+  else if (letter == "2"){
+    returnSize = 5;
+    return morseI._2;
+  }
+  else if (letter == "3"){
+    returnSize = 5;
+    return morseI._3;
+  }
+  else if (letter == "4"){
+    returnSize = 5;
+    return morseI._4;
+  }
+  else if (letter == "5"){
+    returnSize = 5;
+    return morseI._5;
+  }
+  else if (letter == "6"){
+    returnSize = 5;
+    return morseI._6;
+  }
+  else if (letter == "7"){
+    returnSize = 5;
+    return morseI._7;
+  }
+  else if (letter == "8"){
+    returnSize = 5;
+    return morseI._8;
+  }
+  else if (letter == "9"){
+    returnSize = 5;
+    return morseI._9;
+  }
+  else if (letter == "0"){
+    returnSize = 5;
+    return morseI._0;
+  }
+  else if (letter == "?"){
+    returnSize = 6;
+    return morseI.qmrk;
+  }
+  else if (letter == "!"){
+    returnSize = 6;
+    return morseI.emrk;
+  }
+  else if (letter == "."){
+    returnSize = 6;
+    return morseI.prd;
+  }
+  else if (letter == ","){
+    returnSize = 6;
+    return morseI.cma;
+  }
+  else if (letter == ";"){
+    returnSize = 6;
+    return morseI.scol;
+  }
+  else if (letter == ":"){
+    returnSize = 6;
+    return morseI.col;
+  }
+  else if (letter == "+"){
+    returnSize = 5;
+    return morseI.pls;
+  }
+  else if (letter == "-"){
+    returnSize = 6;
+    return morseI.mns;
+  }
+  else if (letter == "/"){
+    returnSize = 5;
+    return morseI.slh;
+  }
+  else if (letter == "="){
+    returnSize = 6;
+    return morseI.eql;
+  }
+  else{
+    Serial.println("Letter not in database and has been skipped")
+  }
+}

@@ -7,6 +7,7 @@ String hello = "hi";
 morseIndex morseI;
 
 void setup() {
+  Serial.begin(9600);
   morseWrite("SOS");
 }
 
@@ -15,11 +16,9 @@ void loop() {
 }
 
 int morseWrite(String message) {
-  Serial.begin(9600);
   for (char c : message){
-    for (bool m : morseI.c){
-      pulse(m);
-    }
+    bool letter = getMorse(c);
+    
   }
 }
 
