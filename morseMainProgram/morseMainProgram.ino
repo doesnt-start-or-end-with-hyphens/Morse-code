@@ -1,24 +1,42 @@
 #include "morseIndex.h"
 
+const uint8_t totalEntries = sizeof(morseIndex) / sizeof(database);
+
+
 bool eClk = digitalRead(3);
 bool eCt = digitalRead(2);
-bool morse = digitalRead(13);
-String hello = "hi";
-morseIndex morseI;
+const uint8_t morse = 13;
+const uint8_t speed = A0;
+const float sensitiv = 1.14;
 
 void setup() {
   Serial.begin(9600);
-  morseWrite("SOS");
+  pinMode(morse, OUTPUT);
 }
 
 void loop() {
-  
+  morseWrite("Hello!");
+  wait(7);
 }
 
-int morseWrite(String message) {
+void morseWrite(String message) {
+  message.toLowerCase();
+
   for (char c : message){
-    bool letter = getMorse(c);
-    
+    bool found = false;
+    for (uint8_t i = 0; i < totalEntries; i++){
+      if (morseIndex[i].letter == c){
+        for (uint8_t j = 0; j< morseIndex[i].len; j++){
+          pulse(morseIndex[i].morse[j]);
+          wait(3);
+        }
+        found = true;
+        break;
+      }
+    }
+    if (not found){
+      Serial.println("Char not in database, skipping...");
+    }
   }
 }
 
@@ -29,13 +47,19 @@ String morseRead(){
 void pulse(bool length){
   digitalWrite(morse, HIGH);
   if (length){
-    delay(3);
+    wait(3);
   }
   else{
-    delay(1);
+    wait(1);
   }
   digitalWrite(morse, LOW);
-  delay(0.25);
+}
+
+void wait(uint8_t step){
+  int temp = 1023-analogRead(speed)/sensitiv;
+  temp = temp*step;
+  temp = temp/100;
+  delay(temp*100);
 }
 
 int menu(){
@@ -48,9 +72,6 @@ void test(){
   }
 }
 
-int delay(){
-
-}
 
 int lColour(String colour) {
   if (colour == "green"){
