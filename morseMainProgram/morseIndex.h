@@ -55,3 +55,25 @@ database morseIndex[] = {
   INPUT_CHAR('/', 1, 0, 0, 1, 0),
   INPUT_CHAR('=', 1, 0, 0, 0, 1)
 };
+String quizWords[] = {
+  "Hello",
+  "Mate",
+  "greeting",
+  "testing",
+  "lol",
+  "bye",
+  "copy",
+  "finished",
+  "dinner",
+  "table",
+  "cop",
+  "fish",
+  "cow",
+  "pig",
+  "sheep",
+  "chicken",
+  "house",
+  "control",
+  "morse",
+  "arduino"
+};

@@ -1,29 +1,44 @@
 #include "morseIndex.h"
+#include "Encoder.h"
 
 const uint8_t totalEntries = sizeof(morseIndex) / sizeof(database);
 
 
-bool eClk = digitalRead(3);
-bool eCt = digitalRead(2);
-const uint8_t morseOut = 13;
-const uint8_t morseIn = 2;
+const uint8_t eClk = 2;
+const uint8_t eCt = 3;
+const bool select = 12;
+const uint8_t morseOut = 4;
+const uint8_t morseIn = 7;
 const uint8_t speed = A0;
+const uint8_t buzz = 8;
 const float sensitiv = 1.14;
 const uint8_t maxInputMorseSize = 50;
 const int defaultDelay = 100;
 const bool defaultBeep = true;
-const float dotBoundTuning = 2.0;
-const float gapBoundTuning = 2.0;
+const float dotBoundTuning = 2.3;
+const float gapBoundTuning = 1.5;
+Encoder selector(eClk, eCt);
 
 void setup() {
+  buzzer("startup");
+  delay(3000);
+  buzzer("select");
+  delay(3000);
+  buzzer("correct");
+  delay(3000);
+  buzzer("incorrect");
   Serial.begin(9600);
   pinMode(morseOut, OUTPUT);
   pinMode(morseIn, INPUT);
-  Serial.println(morseRead());
+  pinMode(eClk, INPUT);
+  pinMode(eCt, INPUT);
+  pinMode(select, INPUT);
+  menu();
 }
 
 void loop() {
-  morseWrite("Hello!");
+  //Serial.println(morseRead());
+  morseWrite("Hello");
   wait(7);
 }
 
@@ -50,6 +65,7 @@ void morseWrite(String message) {
     if (not found){
       Serial.println("Char not in database, skipping...");
     }
+    wait(3);
   }
 }
 
@@ -156,6 +172,7 @@ String morseRead(){
 
 
 void pulse(bool length){
+  tone(buzz, 1000);
   digitalWrite(morseOut, HIGH);
   if (length){
     wait(3);
@@ -163,31 +180,102 @@ void pulse(bool length){
   else{
     wait(1);
   }
+  noTone(buzz);
   digitalWrite(morseOut, LOW);
 }
 
 void wait(uint8_t step){
   if (defaultBeep){
-    delay(defaultDelay);
+    delay(defaultDelay*step);
   }
   else{
-    int temp = 1023-analogRead(speed)/sensitiv;
+    int temp = analogRead(speed);
     temp = temp*step;
     temp = temp/100;
     delay(temp*100);
   }
 }
 
-int menu(){
+void morseReadBack(){
+  int arraySize = 0;
+  for (String c : quizWords){arraySize += 1;}
+  while(true){
+    String qWord = quizWords[random(0, arraySize-1)];
+    bool correct = false;
+    while (!correct){
+      morseWrite(qWord);
+      if (morseRead() == qWord){
+        buzzer("correct");
+        delay(3000);
+      }
+      else{
+        buzzer("incorrect");
+        delay(3000);
+      }
+    }
+  }
+}
 
+int menu(){
+  unsigned long lastDebounceTime = 0;
+  const unsigned long debounceDelay = 15;
+  long oldPosition = -999;
+  while (true){
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+      long currentClick = selector.read() / 4; 
+      if (currentClick != oldPosition) {
+        oldPosition = currentClick;
+        lastDebounceTime = millis();
+        tone(buzz, currentClick*100, 250);
+        Serial.println(currentClick);
+      }
+    }
+  }
 }
 
 void test(){
   while (true){
-
+    morseWrite("Testing");
   }
 }
 
+void buzzer(String type){
+  if (type == "startup"){
+    tone(buzz, 392);
+    delay(150);
+    tone(buzz, 294);
+    delay(150);
+    tone(buzz, 392);
+    delay(150);
+    tone(buzz, 587);
+    delay(150);
+  }
+  else if (type == "select"){
+    tone(buzz, 587);
+    delay(150);
+    tone(buzz, 349);
+    delay(150);
+    tone(buzz, 392);
+    delay(150);
+  }
+  else if (type == "correct"){
+    tone(buzz, 523);
+    delay(200);
+    tone(buzz, 784);
+    delay(200);
+    tone(buzz, 1046);
+    delay(200);
+  }
+  else if (type == "incorrect"){
+    tone(buzz, 587);
+    delay(200);
+    tone(buzz, 554);
+    delay(200);
+    tone(buzz, 523);
+    delay(200);
+  }
+  noTone(buzz);
+}
 
 int lColour(String colour) {
   if (colour == "green"){
