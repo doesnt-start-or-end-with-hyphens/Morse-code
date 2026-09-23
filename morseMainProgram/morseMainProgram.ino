@@ -6,13 +6,15 @@ const uint8_t totalEntries = sizeof(morseIndex) / sizeof(database);
 
 const uint8_t eClk = 2;
 const uint8_t eCt = 3;
-const bool select = 12;
-const uint8_t morseOut = 4;
+const uint8_t select = 12;
+const uint8_t ledG = 4;
+const uint8_t ledR = 5;
 const uint8_t morseIn = 7;
 const uint8_t speed = A0;
 const uint8_t buzz = 8;
 const float sensitiv = 1.14;
 const uint8_t maxInputMorseSize = 50;
+const uint8_t menuSize = 4;
 const int defaultDelay = 100;
 const bool defaultBeep = true;
 const float dotBoundTuning = 2.3;
@@ -20,19 +22,16 @@ const float gapBoundTuning = 1.5;
 Encoder selector(eClk, eCt);
 
 void setup() {
-  buzzer("startup");
-  delay(3000);
-  buzzer("select");
-  delay(3000);
-  buzzer("correct");
-  delay(3000);
-  buzzer("incorrect");
   Serial.begin(9600);
-  pinMode(morseOut, OUTPUT);
+  pinMode(ledR, OUTPUT);
+  pinMode(ledG, OUTPUT);
   pinMode(morseIn, INPUT);
   pinMode(eClk, INPUT);
   pinMode(eCt, INPUT);
   pinMode(select, INPUT);
+  Serial.println(digitalRead(select));
+  buzzer("startup");
+  delay(500);
   menu();
 }
 
@@ -83,7 +82,10 @@ String morseRead(){
   while (!digitalRead(morseIn));
   while (!userTimeOut){
     unsigned long timeStart = millis();
-    while (digitalRead(morseIn));
+    while (digitalRead(morseIn)){
+      tone(buzz, 1000);
+    }
+    noTone(buzz);
     unsigned long durationOn = millis() - timeStart;
     if (durationOn > 20) {
       timeOn[timeOnIndexSize] = durationOn;
@@ -172,8 +174,8 @@ String morseRead(){
 
 
 void pulse(bool length){
-  tone(buzz, 1000);
-  digitalWrite(morseOut, HIGH);
+  lColour("orange");
+  tone(buzz, 500);
   if (length){
     wait(3);
   }
@@ -181,7 +183,7 @@ void pulse(bool length){
     wait(1);
   }
   noTone(buzz);
-  digitalWrite(morseOut, LOW);
+  lColour("");
 }
 
 void wait(uint8_t step){
@@ -218,16 +220,46 @@ void morseReadBack(){
 
 int menu(){
   unsigned long lastDebounceTime = 0;
+  long selected = 1;
+  bool enter = true;
   const unsigned long debounceDelay = 15;
   long oldPosition = -999;
   while (true){
     if ((millis() - lastDebounceTime) > debounceDelay) {
-      long currentClick = selector.read() / 4; 
+      long currentClick = selector.read() / 4;
+      if (select){
+        buzzer("select");
+        delay(2000);
+        if (selected == 1){
+          test();
+        }
+        else if (selected == 2){
+          morseReadBack();
+        }
+      }
       if (currentClick != oldPosition) {
+        if (enter){
+          selected = 1;
+          Serial.println(selected);
+          enter = false;
+        }
+        else if (currentClick > oldPosition){
+          selected += 1;
+          Serial.println(selected);
+        }
+        else if (currentClick < oldPosition){
+          selected -= 1;
+          Serial.println(selected);
+        }
+        if (selected < 1){
+          selected = menuSize;
+        }
+        else if (selected > menuSize){
+          selected = 1;
+        }
         oldPosition = currentClick;
         lastDebounceTime = millis();
-        tone(buzz, currentClick*100, 250);
-        Serial.println(currentClick);
+        tone(buzz, selected*100, 250);
       }
     }
   }
@@ -241,14 +273,19 @@ void test(){
 
 void buzzer(String type){
   if (type == "startup"){
+    lColour("orange");
     tone(buzz, 392);
     delay(150);
+    lColour("red");
     tone(buzz, 294);
     delay(150);
+    lColour("orange");
     tone(buzz, 392);
     delay(150);
+    lColour("green");
     tone(buzz, 587);
     delay(150);
+    lColour("");
   }
   else if (type == "select"){
     tone(buzz, 587);
@@ -277,21 +314,21 @@ void buzzer(String type){
   noTone(buzz);
 }
 
-int lColour(String colour) {
+void lColour(String colour) {
   if (colour == "green"){
-    digitalWrite(7, HIGH);
-    digitalWrite(8, LOW);
+    digitalWrite(ledG, HIGH);
+    digitalWrite(ledR, LOW);
   }
   else if (colour == "red"){
-    digitalWrite(7, LOW);
-    digitalWrite(8, HIGH);
+    digitalWrite(ledG, LOW);
+    digitalWrite(ledR, HIGH);
   }
   else if (colour == "orange"){
-    digitalWrite(7, HIGH);
+    digitalWrite(ledG, HIGH);
     digitalWrite(8, HIGH);
   }
   else{
-    digitalWrite(7, LOW);
-    digitalWrite(7, LOW);
+    digitalWrite(ledG, LOW);
+    digitalWrite(ledR, LOW);
   }
 }
