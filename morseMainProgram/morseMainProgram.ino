@@ -4,8 +4,8 @@
 const uint8_t totalEntries = sizeof(morseIndex) / sizeof(database);
 
 
-const uint8_t eClk = 3;
-const uint8_t eCt = 2;
+const uint8_t eClk = 2;
+const uint8_t eCt = 3;
 const uint8_t select = 12;
 const uint8_t ledG = 5;
 const uint8_t ledR = 4;
@@ -19,9 +19,10 @@ const bool defaultBeep = true;
 const float dotBoundTuning = 2.5;
 const float gapBoundTuning = 1.3;
 Encoder selector(eClk, eCt);
+bool pcAccess;
 
 void setup() {
-  Serial.begin(9600);
+  pcAccess = pcConnect();
   randomSeed(analogRead(A5));
   pinMode(ledR, OUTPUT);
   pinMode(ledG, OUTPUT);
@@ -30,12 +31,27 @@ void setup() {
   pinMode(eCt, INPUT);
   pinMode(select, INPUT);
   buzzer("startup");
+  if (pcAccess){buzzer("PC");}
   delay(500);
   menu();
 }
 
 void loop() {
   
+}
+
+bool pcConnect(){
+  Serial.begin(9600);
+  bool access = false;
+  for (int i = 0; i < 10; i++){
+    Serial.println(0);
+    if (Serial.available() > 0){
+      access = true;
+      break;
+    }
+    delay(500);
+  }
+  return access;
 }
 
 void morseWrite(String message) {
@@ -219,13 +235,17 @@ void pulse(bool length){
 
 void wait(uint8_t step){
   if (defaultBeep){
+    Serial.print(3);
+    Serial.println(defaultBeep);
     delay(defaultDelay*step);
   }
   else{
     int temp = analogRead(speed);
     temp = temp*step;
     temp = temp/100;
-    delay(temp*100);
+    Serial.print(3);
+    Serial.println(temp);
+    delay(temp*50);
   }
 }
 
@@ -281,7 +301,7 @@ void pcReadBack(){
     String qWord = String(morseIndex[random(0, arraySize-1)].letter);
     bool correct = false;
     while (!correct){
-      Serial.print("Encode this as morse: ");
+      Serial.print("10");
       Serial.println(qWord);
       String answer = morseRead();
       answer.trim();
@@ -299,9 +319,14 @@ void pcReadBack(){
 }
 
 int menu(){
+  Serial.println("1");
   uint8_t menuSize;
-  bool confirm = false;
-  menuSize = 5;
+  if (pcAccess){
+    menuSize = 5;
+  }
+  else{
+    menuSize = 3;
+  }
   unsigned long lastDebounceTime = 0;
   long selected = 1;
   bool enter = true;
@@ -312,41 +337,33 @@ int menu(){
       long currentClick = selector.read() / 4;
       if (!digitalRead(select)){
         if (selected == 1){
+          Serial.println("4");
           buzzer("select");
           delay(2000);
           testOutput();
         }
         else if (selected == 2){
-          if (confirm){
-            buzzer("select");
-            delay(2000);
-            testInput();
-          }
-          else{
-            confirm = true;
-            buzzer("PC");
-          }
-        }
-        else if (selected == 3){
+          Serial.println("7");
           buzzer("select");
           delay(2000);
           simpleReadBack();
         }
-        else if (selected == 4){
+        else if (selected == 3){
+          Serial.println("8");
           buzzer("select");
           delay(2000);
           morseReadBack();
         }
+        else if (selected == 4){
+          buzzer("select");
+          delay(2000);
+          testInput();
+        }
         else if (selected == 5){
-          if (confirm){
-            buzzer("select");
-            delay(2000);
-            pcReadBack();
-          }
-          else{
-            confirm = true;
-            buzzer("PC");
-          }
+          Serial.println("9");
+          buzzer("select");
+          delay(2000);
+          pcReadBack();
         }
       }
       if (currentClick != oldPosition) {
@@ -356,11 +373,9 @@ int menu(){
         }
         else if (currentClick > oldPosition){
           selected += 1;
-          confirm = false;
         }
         else if (currentClick < oldPosition){
           selected -= 1;
-          confirm = false;
         }
         if (selected < 1){
           selected = menuSize;
@@ -371,6 +386,8 @@ int menu(){
         oldPosition = currentClick;
         lastDebounceTime = millis();
         tone(buzz, selected*100, 250);
+        Serial.print(2);
+        Serial.println(selected);
       }
     }
   }
@@ -414,6 +431,7 @@ void buzzer(String type){
     delay(150);
   }
   else if (type == "correct"){
+    Serial.println("5");
     lColour("green");
     tone(buzz, 523);
     delay(200);
@@ -424,6 +442,7 @@ void buzzer(String type){
     lColour("");
   }
   else if (type == "incorrect"){
+    Serial.println("6");
     lColour("red");
     tone(buzz, 587);
     delay(200);
@@ -436,7 +455,7 @@ void buzzer(String type){
   else if (type = "PC"){
     tone(buzz, 349);
     delay(150);
-    tone(buzz, 698);
+    tone(buzz, 392);
     delay(150);
     noTone(buzz);
     delay(150);
