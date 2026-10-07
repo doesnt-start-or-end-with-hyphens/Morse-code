@@ -21,6 +21,7 @@ const float gapBoundTuning = 1.3;
 Encoder selector(eClk, eCt);
 bool pcAccess;
 bool writeSpeedDisplay = false;
+void (*resetFunc) (void) = 0;
 
 void setup() {
   pcAccess = pcConnect();
@@ -50,7 +51,7 @@ bool pcConnect(){
       access = true;
       break;
     }
-    delay(500);
+    delay(200);
   }
   return access;
 }
@@ -357,7 +358,7 @@ int menu(){
   Serial.println("2");
   uint8_t menuSize;
   if (pcAccess){
-    menuSize = 6;
+    menuSize = 7;
   }
   else{
     menuSize = 3;
@@ -407,6 +408,11 @@ int menu(){
           buzzer("select");
           delay(2000);
           pcWriteBack();
+        }
+        else if (selected == 7){
+          Serial.println("15");
+          delay(3000);
+          resetFunc();
         }
       }
       if (currentClick != oldPosition) {
