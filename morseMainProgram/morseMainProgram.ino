@@ -20,6 +20,7 @@ const float dotBoundTuning = 2.5;
 const float gapBoundTuning = 1.3;
 Encoder selector(eClk, eCt);
 bool pcAccess;
+bool writeSpeedDisplay = false;
 
 void setup() {
   pcAccess = pcConnect();
@@ -235,8 +236,10 @@ void pulse(bool length){
 
 void wait(uint8_t step){
   if (defaultBeep){
-    Serial.print(3);
-    Serial.println(defaultBeep);
+    if (writeSpeedDisplay){
+      Serial.print(3);
+      Serial.println(defaultBeep);
+    }
     delay(defaultDelay*step);
   }
   else{
@@ -318,11 +321,43 @@ void pcReadBack(){
   }
 }
 
+void pcWriteBack(){
+  int arraySize = 0;
+  for (String c : quizWords){arraySize += 1;}
+  while(true){
+    String qWord = String(morseIndex[random(0, arraySize-1)].letter);
+    bool correct = false;
+    while (!correct){
+      morseWrite(qWord);
+      delay(500);
+      Serial.println("14");
+      delay(500);
+      while (Serial.available() > 0) {
+        Serial.read(); 
+      }
+      while(Serial.available() == 0);
+      if(Serial.readStringUntil("\n") == qWord){
+        Serial.println("5");
+        buzzer("correct");
+        correct = true;
+        delay(3000);
+      }
+      else{
+        Serial.println("6");
+        buzzer("incorrect");
+        delay(3000);
+      }
+    }
+  }
+}
+
 int menu(){
   Serial.println("1");
+  delay(200);
+  Serial.println("2");
   uint8_t menuSize;
   if (pcAccess){
-    menuSize = 5;
+    menuSize = 6;
   }
   else{
     menuSize = 3;
@@ -337,6 +372,7 @@ int menu(){
       long currentClick = selector.read() / 4;
       if (!digitalRead(select)){
         if (selected == 1){
+          writeSpeedDisplay = true;
           Serial.println("4");
           buzzer("select");
           delay(2000);
@@ -355,6 +391,7 @@ int menu(){
           morseReadBack();
         }
         else if (selected == 4){
+          Serial.println("11");
           buzzer("select");
           delay(2000);
           testInput();
@@ -364,6 +401,12 @@ int menu(){
           buzzer("select");
           delay(2000);
           pcReadBack();
+        }
+        else if (selected == 6){
+          Serial.println("13");
+          buzzer("select");
+          delay(2000);
+          pcWriteBack();
         }
       }
       if (currentClick != oldPosition) {
@@ -396,7 +439,9 @@ int menu(){
 void testInput(){
   while (true){
     Serial.println("Enter morse signal now");
-    Serial.println(morseRead());
+    String detected = morseRead();
+    Serial.print("12");
+    Serial.println(detected);
   }
 }
 
