@@ -3,7 +3,7 @@
 
 const uint8_t totalEntries = sizeof(morseIndex) / sizeof(database);
 
-
+//sets up pin locations
 const uint8_t eClk = 2;
 const uint8_t eCt = 3;
 const uint8_t select = 12;
@@ -12,20 +12,29 @@ const uint8_t ledR = 4;
 const uint8_t morseIn = 7;
 const uint8_t speed = A0;
 const uint8_t buzz = 8;
+//sensitivity for speed tuning
 const float sensitiv = 1.14;
-const uint8_t maxInputMorseSize = 50;
+//the size of the array has to be defined
+const uint8_t maxInputMorseSize = 500;
+//defult speed as well as enabling that function, used if not potentiometer
 const int defaultDelay = 100;
-const bool defaultBeep = true;
+const bool defaultBeep = false;
+//tuning for morse reading
 const float dotBoundTuning = 2.5;
 const float gapBoundTuning = 1.3;
+//sets up other things
 Encoder selector(eClk, eCt);
 bool pcAccess;
-bool writeSpeedDisplay = false;
+bool writeSpeedDisplay;
 void (*resetFunc) (void) = 0;
 
 void setup() {
+  writeSpeedDisplay = false;
+  //checks for interface connection
   pcAccess = pcConnect();
+  //gets random seed from stray values from n unused analog pin
   randomSeed(analogRead(A5));
+  //sets I/O
   pinMode(ledR, OUTPUT);
   pinMode(ledG, OUTPUT);
   pinMode(morseIn, INPUT);
@@ -39,14 +48,16 @@ void setup() {
 }
 
 void loop() {
-  
+  //loop is never used here
 }
 
+//checks connection to interface
 bool pcConnect(){
   Serial.begin(9600);
   bool access = false;
   for (int i = 0; i < 10; i++){
     Serial.println(0);
+    //checks if the interface is trying to send data
     if (Serial.available() > 0){
       access = true;
       break;
@@ -56,18 +67,23 @@ bool pcConnect(){
   return access;
 }
 
+//writes morse from the proveded string
 void morseWrite(String message) {
   message.toLowerCase();
 
+  //for each char in the message
   for (char c : message){
     bool found = false;
+    //if c is a space, wait 7 steps
     if (c == " "){
       wait(7);
     }
     else{
       for (uint8_t i = 0; i < totalEntries; i++){
+        //finds the letter in database
         if (morseIndex[i].letter == c){
           for (uint8_t j = 0; j < morseIndex[i].len; j++){
+            //pulses according to the internal bool values
             pulse(morseIndex[i].morse[j]);
             wait(3);
           }
@@ -76,6 +92,7 @@ void morseWrite(String message) {
         }
       }
     }
+    //if a charicter is not in the database
     if (not found){
       Serial.println("Char not in database, skipping...");
     }
@@ -83,35 +100,46 @@ void morseWrite(String message) {
   }
 }
 
+//listens to user inputs and converts to string
 String morseRead() {
+  //tuning values
   const unsigned long debounceTime = 15;
   const unsigned long minPulseTime = 30;
   const unsigned long messageTimeout = 2000;
   const float onClusterRatio = 1.8;
   const float offClusterRatio = 1.8;
+  //creates the on and off time banks
   unsigned long timeOn[maxInputMorseSize];
   unsigned long timeOff[maxInputMorseSize];
   uint8_t timeOnCount = 0;
   uint8_t timeOffCount = 0;
   bool userTimeOut = false;
+  //waits until the first on signal starts
   while (!digitalRead(morseIn)) {
     delay(1);
   }
+  //protects aginst ouncy switches
   delay(debounceTime);
+  //runs until time between inputs is too long
   while (!userTimeOut && timeOnCount < maxInputMorseSize) {
+    //time is relitive to the systems run time
     unsigned long startTime = millis();
     tone(buzz, 1000);
     while (digitalRead(morseIn)) {
       delay(1);
     }
     noTone(buzz);
+    //ends that time tracking
     unsigned long onDuration = millis() - startTime;
+    //ignores if suspected bouncy switch
     if (onDuration < minPulseTime) {
       delay(debounceTime);
       continue;
     }
+    //adds to time on ba
     timeOn[timeOnCount++] = onDuration;
     delay(debounceTime);
+    //same process for gaps (off time)
     startTime = millis();
     while (!digitalRead(morseIn)) {
       if (millis() - startTime >= messageTimeout) {
@@ -129,9 +157,11 @@ String morseRead() {
     }
     delay(debounceTime);
   }
+  //skips calculations if the user inputs nothing
   if (timeOnCount == 0) {
     return "";
   }
+  //finds the dash length
   float dashThreshold = findTimingSplit(timeOn, timeOnCount, onClusterRatio);
   if (dashThreshold == 0) {
     unsigned long average = 0;
@@ -146,15 +176,19 @@ String morseRead() {
       dashThreshold = 0;
     }
   }
+  //same thing but for gaps
   float letterGapThreshold = findTimingSplit(timeOff, timeOffCount, offClusterRatio);
+  //preps the message for construction
   String message = "";
   bool checkedLetter[maxInputMorseSize];
   uint8_t lenOfLetter = 0;
+  //adds all letters
   for (uint8_t i = 0; i < timeOnCount; i++) {
     checkedLetter[lenOfLetter] = timeOn[i] >= dashThreshold;
     lenOfLetter++;
     bool endOfLetter = i == timeOnCount - 1;
     if (!endOfLetter && i < timeOffCount && letterGapThreshold > 0) {
+      //terminate current letter if gap long enough
       if (timeOff[i] >= letterGapThreshold) {
         endOfLetter = true;
       }
@@ -190,6 +224,7 @@ String morseRead() {
   return message;
 }
 
+//finds the split in gap timings
 float findTimingSplit(unsigned long values[], uint8_t count, float minRatio) {
   if (count < 2) return 0;
   float low = values[0];
@@ -222,6 +257,7 @@ float findTimingSplit(unsigned long values[], uint8_t count, float minRatio) {
   return (low + high) / 2.0;
 }
 
+//runs a morse pulse length dependant on input bool
 void pulse(bool length){
   lColour("orange");
   tone(buzz, 500);
@@ -235,7 +271,9 @@ void pulse(bool length){
   lColour("");
 }
 
+//the delay steps dependant on speed*steps
 void wait(uint8_t step){
+  //if the defult step is set true
   if (defaultBeep){
     if (writeSpeedDisplay){
       Serial.print(3);
@@ -247,17 +285,23 @@ void wait(uint8_t step){
     int temp = analogRead(speed);
     temp = temp*step;
     temp = temp/100;
-    Serial.print(3);
-    Serial.println(temp);
+    if (writeSpeedDisplay){
+      Serial.print(3);
+      Serial.println(defaultBeep);
+    }
     delay(temp*50);
   }
 }
 
+//first gamemode
 void simpleReadBack(){
   uint8_t size = 42;
+  //runs forever
   while (true){
+    //picks letter
     String qWord = String(morseIndex[random(0, totalEntries)].letter);
     bool correct = false;
+    //repeats until user gets right
     while (!correct){
       morseWrite(qWord);
       String answer = morseRead();
@@ -275,10 +319,12 @@ void simpleReadBack(){
   }
 }
 
+//seconds gamemode
 void morseReadBack(){
   int arraySize = 0;
   for (String c : quizWords){arraySize += 1;}
   while(true){
+    //same as before but whole words
     String qWord = quizWords[random(0, arraySize-1)];
     bool correct = false;
     while (!correct){
@@ -298,6 +344,7 @@ void morseReadBack(){
   }
 }
 
+//third gamemode
 void pcReadBack(){
   int arraySize = 0;
   for (String c : quizWords){arraySize += 1;}
@@ -305,6 +352,7 @@ void pcReadBack(){
     String qWord = String(morseIndex[random(0, arraySize-1)].letter);
     bool correct = false;
     while (!correct){
+      //sends graphical data to interface
       Serial.print("10");
       Serial.println(qWord);
       String answer = morseRead();
@@ -322,6 +370,7 @@ void pcReadBack(){
   }
 }
 
+//fourth gamemode
 void pcWriteBack(){
   int arraySize = 0;
   for (String c : quizWords){arraySize += 1;}
@@ -333,9 +382,11 @@ void pcWriteBack(){
       delay(500);
       Serial.println("14");
       delay(500);
+      //clears the buffer
       while (Serial.available() > 0) {
         Serial.read(); 
       }
+      //waits for interface to return the users answer
       while(Serial.available() == 0);
       if(Serial.readStringUntil("\n") == qWord){
         Serial.println("5");
@@ -352,11 +403,13 @@ void pcWriteBack(){
   }
 }
 
+//main menu
 int menu(){
   Serial.println("1");
   delay(200);
   Serial.println("2");
   uint8_t menuSize;
+  //standalone only allows the first 3 options
   if (pcAccess){
     menuSize = 7;
   }
@@ -371,7 +424,9 @@ int menu(){
   while (true){
     if ((millis() - lastDebounceTime) > debounceDelay) {
       long currentClick = selector.read() / 4;
+      //encoder button is inverted in signal
       if (!digitalRead(select)){
+        //executes the mode
         if (selected == 1){
           writeSpeedDisplay = true;
           Serial.println("4");
@@ -415,6 +470,7 @@ int menu(){
           resetFunc();
         }
       }
+      //selects baised on encoder turns
       if (currentClick != oldPosition) {
         if (enter){
           selected = 1;
@@ -434,6 +490,7 @@ int menu(){
         }
         oldPosition = currentClick;
         lastDebounceTime = millis();
+        //plays tone baised on selected option
         tone(buzz, selected*100, 250);
         Serial.print(2);
         Serial.println(selected);
@@ -442,6 +499,7 @@ int menu(){
   }
 }
 
+//tests thw users input
 void testInput(){
   while (true){
     Serial.println("Enter morse signal now");
@@ -451,12 +509,14 @@ void testInput(){
   }
 }
 
+//used to addjust the writing speed
 void testOutput(){
   while (true){
     morseWrite("Testing");
   }
 }
 
+//stores all the buzzzer sequences
 void buzzer(String type){
   if (type == "startup"){
     lColour("orange");
@@ -514,6 +574,7 @@ void buzzer(String type){
   noTone(buzz);
 }
 
+//sets the tricolor led
 void lColour(String colour) {
   if (colour == "green"){
     digitalWrite(ledG, HIGH);
